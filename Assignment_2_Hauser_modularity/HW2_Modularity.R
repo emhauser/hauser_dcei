@@ -12,9 +12,20 @@ if (provided = T)
 
 #Chunk 2_Data Clean
  MinYearsDat <- 40
- aggregate(precip, by = list("state", "name", "lon", "lat"), FUN = "mean")
- sum(is.na(precip$data))
-  #Convert Data to matrix
+ DataRaw <- precip
+ RawVar <- data
+ AggregateGroups <- list(DataRaw$state, DataRaw$name, DataRaw$lat, DataRaw$lon)
+ NaCount <- function(dat=DataRaw$RawVar)
+  {
+    return(sum(is.na(dat)))
+  }
+ DatClean <- aggregate.data.frame(DataRaw, by = AggregateGroups, FUN = "NaCount")
+
+ CleanDat <- DatClean[DatClean$data >= MinYearsDat,]
+
+
+ 
+ #Convert Data to matrix
  
 
 #Questions:
