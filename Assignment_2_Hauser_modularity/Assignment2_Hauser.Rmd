@@ -1,0 +1,52 @@
+---
+title: "Assignment 2_Climate Change"
+author: "Emma Hauser"
+output: html_document
+params:
+  today: !r.Sys.Date
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r DataImport}
+provided <- TRUE
+if (provided = T)
+{
+  precip <- readRDS("USAAnnualPcpn1950_2008.rds")
+  temp <- readRDS("USAAnnualTemp1950_2008.rds")
+}
+```
+
+```{r DataCleanup}
+ MinYearsDat <- 40
+ aggregate(precip, by = list("state", "name", "lon", "lat"), FUN = "mean")
+ sum(is.na(precip$data))
+  #Convert Data to matrix
+```
+# Abstract
+
+## Introduction
+
+## Methods
+
+## Results
+
+## Conclusion
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## References
