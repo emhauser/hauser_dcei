@@ -21,6 +21,8 @@ if (provided = T)
   }
  DatClean <- aggregate.data.frame(DataRaw, by = AggregateGroups, FUN = "NaCount")
 
+ subset(DataRaw, sum(is.na(DataRaw$data)) >= MinYearsDat)
+ 
  CleanDat <- DatClean[DatClean$data >= MinYearsDat,]
 
 
@@ -73,4 +75,5 @@ locTemps <- split(temp, temp$state)
 locTdat <- tapply (locTemps$data, locTemps$year, mean)
 locTemps[30]
 
-help(
+
+

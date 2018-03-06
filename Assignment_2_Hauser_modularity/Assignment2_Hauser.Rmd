@@ -7,32 +7,52 @@ params:
 bibliography: HW2Refs.bib
 ---
 
+<!--Chunk for file setup-->
 ```{r setup, include=FALSE}
+#dependencies: none
+#load packages:
+#general prep:
+#new objects created: none
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+<!--Chunk for data import-->
 ```{r DataImport}
+#Dependencies:external source
 provided <- TRUE
-if (provided = T)
+if (provided)
 {
   precip <- readRDS("USAAnnualPcpn1950_2008.rds")
   temp <- readRDS("USAAnnualTemp1950_2008.rds")
+} else
+{
+  #fill in
 }
+
+#New object(s) created: dataframe of each dataset imported, precip, temp
 ```
 
+<!--Chunk for cleaning data-->
 ```{r DataCleanup}
+#Dependencies: imported data, precip, temp
+#Inputs/Args: number of years data required, dataset, data variable of interest
+#function (MinYearsDat, dataset) {remove sites with less than 40 sample points, return(clean datamatrix)}
 MinYearsDat <- 40
  DataRaw <- precip
  RawVar <- data
  AggregateGroups <- list(DataRaw$state, DataRaw$name, DataRaw$lat, DataRaw$lon)
+ 
  NaCount <- function(dat=DataRaw$RawVar)
   {
     return(sum(is.na(dat)))
-  }
+ }
+ 
  DatClean <- aggregate.data.frame(DataRaw, by = AggregateGroups, FUN = "NaCount")
 
  CleanDat <- DatClean[DatClean$data >= MinYearsDat,]
   #Convert Data to matrix
+ 
+ #New objects created: data matrix of each dataset: cdataset as matrix
 ```
 # Abstract
 
@@ -42,20 +62,53 @@ MinYearsDat <- 40
 
 ## Results
 
-## Conclusion
+<!--Chunk for Climate Warming-->
+<!--Code that shows temp change over time at each location that has 40 or more years of data-->
+```{r Warming}
+#Dependencies: cdataset matrix
+#Inputs: climate dataset, with years and temps
+#function (data=climate dataset)
+#{
+#subset by location. By location:
+#corr(temp_data~year)
+#plot(temp_data~year)
 
-```{r cars}
-summary(cars)
+#return(statistic, plot)
+#}
+
+#New objects created: plots by location, corr statistic
 ```
 
-## Including Plots
+<!--Chunk for Precip Change-->
+<!--Code that shows precip over time at each location that has 40 or more years of data-->
+```{r Precip}
+#Dependencies: cdataset matrix
+#Inputs: precipit dataset, with years and temps
+#function (data=precip dataset)
+#{
+#subset by location. By location:
+#corr(temp_data~year)
+#plot(temp_data~year)
 
-You can also embed plots, for example:
+#return(statistic, plot)
+#}
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#New objects created: plots by location, corr statistic
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+<!--A chunk to map the data-->
+```{r Maps}
+#Dependencies: plots and corr stats, datasets
+#input: dataset
+
+#function to show plots by location
+#return(map)
+
+#New ojbects created: datamaps
+```
+
+
+## Conclusions
+
 
 ## References
