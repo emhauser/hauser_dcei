@@ -37,22 +37,33 @@ if (provided)
 #Dependencies: imported data, precip, temp
 #Inputs/Args: number of years data required, dataset, data variable of interest
 #function (MinYearsDat, dataset) {remove sites with less than 40 sample points, return(clean datamatrix)}
-MinYearsDat <- 40
- DataRaw <- precip
- RawVar <- data
- AggregateGroups <- list(DataRaw$state, DataRaw$name, DataRaw$lat, DataRaw$lon)
- 
- NaCount <- function(dat=DataRaw$RawVar)
+DataRaw <- temp
+MinYearsDat <- 39
+RawVar <- data
+ CleanUp <- function(DataRaw, MinYearsDat, RawVar)
   {
+   NaCount <- function(dat=DataRaw$RawVar)
+    {
     return(sum(is.na(dat)))
+    }
+  AggregateGroups <- list(DataRaw$state, DataRaw$name, DataRaw$lat, DataRaw$lon)
+  DatClean <- aggregate.data.frame(DataRaw, by = AggregateGroups, FUN = "NaCount")
+  CleanDat <- DatClean[DatClean$data < MinYearsDat, "Group.2"]
+  CDat <- DataRaw[DataRaw$name%in%CleanDat,]
+  years <- as.vector(unique(CDat$year))
+  yearnum <-length(years)
+  sitenames <- unique(paste(CDat$state, CDat$name, CDat$lat, CDat$lon))
+  ClimateData <- CDat$data
+  ClimateData
+  m <- matrix(ClimateData, ncol = yearnum, byrow = T)
+  row.names(m) <- sitenames
+  colnames(m) <- years
  }
- 
- DatClean <- aggregate.data.frame(DataRaw, by = AggregateGroups, FUN = "NaCount")
 
- CleanDat <- DatClean[DatClean$data >= MinYearsDat,]
-  #Convert Data to matrix
+CTemp <- CleanUp(temp, MinYearsDat = 39, RawVar = data)
+CPrecip <- CleanUp(precip, MinYearsDat = 39, RawVar = data)
  
- #New objects created: data matrix of each dataset: cdataset as matrix
+ #New objects created: data.frame of each dataset: cdataset
 ```
 # Abstract
 
