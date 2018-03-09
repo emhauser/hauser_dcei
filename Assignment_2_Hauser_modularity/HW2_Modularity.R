@@ -1,4 +1,6 @@
 
+install.packages(maps)
+
 #Chunk 1_Data Import
 provided <- TRUE
 if (provided = T)
@@ -34,23 +36,28 @@ RawVar <- data
  years <- unique(temp$year) 
 CTemp <- CleanUp(DataRaw = temp, MinYearsDat = 39, RawVar = data)
 CPrecip <- CleanUp(precip, MinYearsDat = 39, RawVar = data)
-head(CTemp)
+
+
+
 help("matplot")
+
 apply (CTemp, 1, function (x) cor.test(x=x, y=years))
 summary(lm(CTemp[5,] ~ years))$P
 plot(CTemp[5,]~years, type = "l")
+
 
 regressionRval <- function(x)
   {
         y <- !is.na(x)
         stat <- lm(y ~ years)
-        pval <- summary(stat)$coefficients[2,1]
+        rval <- summary(stat)$coefficients[2,1]
 }
 
 SlopeDat <- apply(CTemp, 1, regressionRval)
 RVals <- as.vector(apply(CTemp, 1, regressionRval))
 summary(RVals)
-typeof(SlopeDat)
+str(SlopeDat)
+length(which(SlopeDat > 0))/length(SlopeDat)
 
 
 regressionPval <- function(x)
@@ -59,8 +66,11 @@ regressionPval <- function(x)
   stat <- lm(y ~ years)
   rval <- summary(stat)$coefficients[2,4]
 }
+SlopeDatP <- apply(CTemp, 1, regressionPval)
 PVals <- as.vector(apply(CTemp, 1, regressionPval))
-PVals
+summary(PVals)
+length(which(SlopeDatP < 0.05))/length(SlopeDatP)
+
 
 matplot(t(CTemp), type = "l")
 help("matplot")

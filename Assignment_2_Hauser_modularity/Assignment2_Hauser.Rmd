@@ -11,6 +11,8 @@ bibliography: HW2Refs.bib
 ```{r setup, include=FALSE}
 #dependencies: none
 #load packages:
+install.packages(maps)
+library(maps)
 #general prep:
 #new objects created: none
 knitr::opts_chunk$set(echo = TRUE)
