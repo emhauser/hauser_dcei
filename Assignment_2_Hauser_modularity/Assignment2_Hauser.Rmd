@@ -26,7 +26,7 @@ if (provided)
 {
   precip <- readRDS("USAAnnualPcpn1950_2008.rds")
   temp <- readRDS("USAAnnualTemp1950_2008.rds")
-} else
+} else ( # Get from internet )
 {
   #fill in
 }
@@ -70,6 +70,7 @@ CPrecip <- CleanUp(precip, MinYearsDat = 39, RawVar = data)
 # Abstract
 
 ## Introduction
+  It is increasinly widley accepted that climates have been shifting over the past several decades and will continue to change in coming years in response to human environmental impacts (CITE). Although climate change was initially couched as "global warming," more recent observations suggest that we may experience both warming and cooling events, characterized instead by more frequent temperature and precipitation extremes (CITE). These extreme events have been felt in other countries, particuarly countries in Africa (CITE), but it in the United States, more temperate climates and a socioeconomic standing permitting ready respond to extreme weather events often makes the impacts of climate change go relatively unacknowledged (CITE). However, United States climate data is accumulating daily, such that a thorough analysis of temperature extremes is possible. This study aims to determine the extent to which temperature and precipitation patterns have changed in the United States over the past several decades, and whether observed changes represent overall warming trends or rather an increase in climate extremes.
 
 ## Methods
 
