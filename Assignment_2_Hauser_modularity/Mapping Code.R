@@ -26,4 +26,4 @@ head(usa)
 
 #http://eriqande.github.io/rep-res-web/lectures/making-maps-with-R.html
 
-
+#http://www.geog.uoregon.edu/GeogR/examples/maps_examples02.htm

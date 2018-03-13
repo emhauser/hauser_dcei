@@ -105,8 +105,27 @@ length(which(SlopeDatP < 0.05))/length(SlopeDatP)
  #Chunk6_Amapofallthisdata#
 
 ###Mapping###
-map(regions = "usa", xlim = c(-180,-45))
+library(maps)
+library(tidyr)
+install.packages("colorRamps")
+library(colorRamps)
+coords <- as.data.frame(unique(paste(CTempFrame$lat, CTempFrame$lon)))
+mapdat <- separate(data = coords, col = `unique(paste(CTempFrame$lat, CTempFrame$lon))`, into = c("lat", "long"), sep = " ") 
+mapdat$slopes <- RVals
+sortedMapDat <-mapdat[rev(order(mapdat$slopes)),]
 
+map(regions = "usa", xlim = c(-180,-45))
+  points(sortedMapDat$long, sortedMapDat$lat, col = c("blue", "red")[sortedMapDat$Groups], pch = 20, cex = 0.2)
+  range(mapdat$slopes)
+
+  sortedMapDat["Groups"] <- NA  
+ for(sites in 1:nrow(sortedMapDat)){
+   sortedMapDat$Groups[sites] <- if(sortedMapDat$slopes[sites]>0){1}else{0}
+  }
+  
+ unique(sortedMapDat$Groups)
+  
+  
 help(map)
 install.packages("mapproj")
 library("mapproj")
@@ -174,7 +193,13 @@ data(ozone)
 head(ozone)
 help(map)
 
-data(ozone)
-map("usa", xlim = range(CTempFrame$lon), ylim = range(CTempFrame$lat))
+data(ozone) 
+map()
+map(database = "usa")
+points(CTempFrame$lon~CTempFrame$lat)
+head(CTempFrame)
 text(CTempFrame$lon, CTempFrame$lat, RVals)
-library(ggmap)
+library(ggmap) #color palates, color maps
+
+help("map")
+map(CTempFrame$data)
