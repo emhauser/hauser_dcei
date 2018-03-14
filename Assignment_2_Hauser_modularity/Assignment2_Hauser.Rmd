@@ -4,18 +4,18 @@ author: "Emma Hauser"
 output: html_document
 params:
   today: !r.Sys.Date
-bibliography: HW2Refs.bib
+#bibliography: HW2Refs.bib
 ---
 
 <!--Chunk for file setup-->
 ```{r setup, include=FALSE}
 #dependencies: none
 #load packages:
-install.packages(maps)
 library(maps)
-#general prep:
+library(tidyr)
+library(colorRamps)
+knitr::opts_chunk$set(echo = F)
 #new objects created: none
-knitr::opts_chunk$set(echo = TRUE)
 ```
 
 <!--Chunk for data import-->
@@ -26,46 +26,40 @@ if (provided)
 {
   precip <- readRDS("USAAnnualPcpn1950_2008.rds")
   temp <- readRDS("USAAnnualTemp1950_2008.rds")
-} else ( # Get from internet )
-{
-  #fill in
+#} else ( # Get from internet )
+#{
+  #acis.url <- www.yoururlhere...
+   #httr::GET(url=acis.url)
+    #make human readable:  httr::content(test, "text"...)
+    #convert JSON to R list:   jasonlite::fromJSON(dat)    : makes an R list
+    # set up directory to write data:     ifelse(dir.exists("rds"))
+  # [sidenote: interacting with list
+    #data$object]
+    #save to prevent having to request again
+    #convert JSON data to a matrix
+    #Cleanup:
+      #convert missing values to NA
+      #trace <- runif(1000, 0.0001,.0099)
+      #sub real possible numbers: ff[ff=="T]
+      #class(ff) <- numeric # convert to numeric
+      #change up dates...lubridate
 }
 
 #New object(s) created: dataframe of each dataset imported, precip, temp
+
 ```
 
 <!--Chunk for cleaning data-->
 ```{r DataCleanup}
 #Dependencies: imported data, precip, temp
-#Inputs/Args: number of years data required, dataset, data variable of interest
-#function (MinYearsDat, dataset) {remove sites with less than 40 sample points, return(clean datamatrix)}
-DataRaw <- temp
-MinYearsDat <- 39
-RawVar <- data
- CleanUp <- function(DataRaw, MinYearsDat, RawVar)
-  {
-   NaCount <- function(dat=DataRaw$RawVar)
-    {
-    return(sum(is.na(dat)))
-    }
-  AggregateGroups <- list(DataRaw$state, DataRaw$name, DataRaw$lat, DataRaw$lon)
-  DatClean <- aggregate.data.frame(DataRaw, by = AggregateGroups, FUN = "NaCount")
-  CleanDat <- DatClean[DatClean$data < MinYearsDat, "Group.2"]
-  CDat <- DataRaw[DataRaw$name%in%CleanDat,]
-  years <- as.vector(unique(CDat$year))
-  yearnum <-length(years)
-  sitenames <- unique(paste(CDat$state, CDat$name, CDat$lat, CDat$lon))
-  ClimateData <- CDat$data
-  ClimateData
-  m <- matrix(ClimateData, ncol = yearnum, byrow = T)
-  row.names(m) <- sitenames
-  colnames(m) <- years
- }
+#Inputs/Args: number of years data required (40), dataset (here, temp and precip), data variable of interest (here this is "data" column in the data.frame)
+source("DataCleanupCodes.R")
+CTempMat <- CleanUpMat(DataRaw = temp, MinYearsDat = 39, RawVar = data)   # to be more modular, make these into a loop
+CTempFrame <- CleanUpDataFrame(DataRaw = temp, MinYearsDat = 39, RawVar = data)
+CPrecipMat <- CleanUpMat(DataRaw = precip, MinYearsDat = 39, RawVar = data)
+CPrecipFrame <- CleanUpDataFrame(DataRaw = precip, MinYearsDat = 39, RawVar = data)
 
-CTemp <- CleanUp(temp, MinYearsDat = 39, RawVar = data)
-CPrecip <- CleanUp(precip, MinYearsDat = 39, RawVar = data)
- 
- #New objects created: data.frame of each dataset: cdataset
+ #New objects created: data.frame and matrix of each dataset: CDatasetFrame and CDatasetMat
 ```
 # Abstract
 
@@ -73,9 +67,12 @@ CPrecip <- CleanUp(precip, MinYearsDat = 39, RawVar = data)
   Studies increasingly acknowledge that climates have been shifting over the past several decades and will continue to change in coming years in response to human environmental impacts (CITE). Although climate change was initially couched as "global warming", more recent observations suggest that we may experience both warming and cooling trends, characterized instead by more frequent temperature and precipitation extremes (CITE). These extreme events are already felt in warmer drier countries, particuarly in Africa and Asia where the infrastructure to handle repeated extreme climate events is not strong (@Patz2005). In the United States, however, more temperate climates and a socioeconomic standing that permits relatively quick responses to extreme weather events often makes the impacts of climate change go unacknowledged (@Patz2005). United States climate data is accumulating daily, though, such that a thorough analysis of temperature extremes is possible. This study aims to determine the extent to which temperature and precipitation patterns have changed in the United States over the past several decades, and whether observed changes represent overall warming trends or rather, an increase in climate extremes.
 
 ## Methods
-  ####Data acquisition
-  In this study, we obtained temperature and precipitation data from the Applied Climate Information System (ACIS) from 1950 to present. These data represent multpile sites in each of the 50 states, however we excluded sites for which less than 40 years of climate data had been collected. This gave us #### sites of temperature and #### sites of precipitation data. 
-  ####Statistical Analyses
+####Data acquisition
+
+  In this study, we obtained temperature ($^{\circ}$C)and precipitation (inches) data from the Applied Climate Information System (ACIS) from 1950 to present. These data represent multpile sites in each of the 50 states, however we excluded sites for which less than 40 years of climate data had been collected. This gave us `r nrow(CTempMat)` sites of temperature data and `r nrow(CPrecipMat)` sites of precipitation data. 
+  
+####Statistical Analyses
+We ran linear regression analyses on temperature and precipitation data from each site over the course of the last `r ncol(CTempMat)` years. We the minimum, maximum, and average rates of temperature and precipitation change and the percent of sites where changes were statistically significant. We then plotted rate of temperature and precipitation change according to latitude and longitude to visually assess spatial distribution of temperature and precipitation change rates. 
 
 ## Results
 
@@ -83,17 +80,25 @@ CPrecip <- CleanUp(precip, MinYearsDat = 39, RawVar = data)
 <!--Code that shows temp change over time at each location that has 40 or more years of data-->
 ```{r Warming}
 #Dependencies: cdataset matrix
-#Inputs: climate dataset, with years and temps
-#function (data=climate dataset)
-#{
-#subset by location. By location:
-#corr(temp_data~year)
-#plot(temp_data~year)
+#Inputs: climate dataset organized by years and sites
+source("HW2_Modularity.R")
+SummaryDat <- setNames(data.frame(matrix(ncol = 4, nrow = 2)), c("Climate Variable", "Minimum Change Rate", "Mean Change Rate", "Maximum Change Rate"))
+years <- 1:ncol(CTempMat)
+RVals <- apply(CTempMat, 1, regressionRval)
+SummaryDat[1,1] <- "Temperature (C)"
+SummaryDat[1,2]<-summary(RVals)[1]
+SummaryDat[1,3]<-summary(RVals)[4]
+SummaryDat[1,4]<-summary(RVals)[6]
 
-#return(statistic, plot)
-#}
+years <- 1:ncol(CPrecipMat)
+RVals <- apply(CPrecipMat, 1, regressionRval)
+SummaryDat[2,1] <- "Precipitation (inches)"
+SummaryDat[2,2]<-summary(RVals)[1]
+SummaryDat[2,3]<-summary(RVals)[4]
+SummaryDat[2,4]<-summary(RVals)[6]
 
-#New objects created: plots by location, corr statistic
+
+#New objects created: table of maximum, minimum, and mean temperature changes across sites in the US.
 ```
 
 <!--Chunk for Precip Change-->
