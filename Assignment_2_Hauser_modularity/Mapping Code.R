@@ -14,6 +14,7 @@ coords <- as.data.frame(unique(paste(CTempFrame$lat, CTempFrame$lon)))
 mapdat <- separate(data = coords, col = `unique(paste(CTempFrame$lat, CTempFrame$lon))`, into = c("lat", "long"), sep = " ") 
 mapdat$slopes <- RVals
 
+
 usa <- map_data("usa")
 ggplot() + geom_polygon(data = usa, aes(x=long, y = lat, group = group)) + 
   coord_fixed(1.3)

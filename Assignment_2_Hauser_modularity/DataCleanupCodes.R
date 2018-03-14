@@ -31,4 +31,4 @@ CleanUpDataFrame <- function(DataRaw, MinYearsDat, RawVar)
   DatClean <- aggregate.data.frame(DataRaw, by = AggregateGroups, FUN = "NaCount")
   CleanDat <- DatClean[DatClean$data < MinYearsDat, "Group.2"]
   CDat <- DataRaw[DataRaw$name%in%CleanDat,]
-}
+}d

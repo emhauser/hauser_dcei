@@ -2,11 +2,9 @@
 install.packages(maps)
 library(maps)
 
-help(map)
-
 #Chunk 1_Data Import
 provided <- TRUE
-if (provided = T)
+if (provided = TRUE)
 {
   precip <- readRDS("USAAnnualPcpn1950_2008.rds")
   temp <- readRDS("USAAnnualTemp1950_2008.rds")
@@ -16,7 +14,6 @@ if (provided = T)
 
 #Chunk 2_Data Clean
 #Input: Raw Data
-Datasets <- c(precip, temp)
 
 DataRaw <- temp
 MinYearsDat <- 39
@@ -51,11 +48,7 @@ CleanUpMat <- function(DataRaw, MinYearsDat, RawVar)
    CDat <- DataRaw[DataRaw$name%in%CleanDat,]
  }
 
-#for(set in Datasets)
-#{
- # cat("C", name(set), "Mat") <- CleanUpMat(DataRaw = temp, MinYearsDat = 39, RawVar = data)
-#}
- 
+
 CTempMat <- CleanUpMat(DataRaw = temp, MinYearsDat = 39, RawVar = data)
 CTempFrame <- CleanUpDataFrame(DataRaw = temp, MinYearsDat = 39, RawVar = data)
 CPrecipMat <- CleanUpMat(DataRaw = precip, MinYearsDat = 39, RawVar = data)
@@ -70,17 +63,35 @@ CPrecipFrame <- CleanUpDataFrame(DataRaw = precip, MinYearsDat = 39, RawVar = da
 
 
 #A function calculating regression slopes for sites in climate datasets
-regressionRval <- function(x)
-  {
-        y <- !is.na(x)
-        stat <- lm(y ~ years)
-        rval <- summary(stat)$coefficients[2,1]
+Datasets <- list(as.matrix(CTempMat),as.matrix(CPrecipMat))
+years <- 1:ncol(CTempMat)
+SummaryDat <- setNames(data.frame(matrix(ncol = 4, nrow = length(Datasets))), c("Climate Variable", "Minimum Change Rate", "Mean Change Rate", "Maximum Change Rate"))
+  regressionRval <- function(x)
+      {
+          y <- !is.na(x)
+          stat <- lm(y ~ years)
+          rval <- summary(stat)$coefficients[2,1]
+  }
+numSets<-length(Datasets)
+for(set in 1:numSets){
+RVals <- apply(Datasets[set], 1, regressionRval)
+SummaryDat[set,1] <- "Temperature (C)"
+SummaryDat[set,2]<-summary(RVals)[1]
+SummaryDat[set,3]<-summary(RVals)[4]
+SummaryDat[set,4]<-summary(RVals)[6]
 }
-years <- unique(temp$year) 
-SlopeDat <- apply(CTempMat, 1, regressionRval)
-RVals <- as.vector(apply(CTempMat, 1, regressionRval))
-summary(SlopeDat)
-str(SlopeDat)
+typeof(Datasets[1])
+  for(set in seq_along(Datasets)){
+    return(set[1,1])
+  }
+  typeof(Datasets[1])
+  str(Datasets[1])
+head(Datasets[1])
+help("diff")
+
+
+
+
 length(which(SlopeDat > 0))/length(SlopeDat)
 
 #A function calculating the p-value of regression slopes for sites in climate datasets
@@ -109,20 +120,48 @@ library(maps)
 library(tidyr)
 install.packages("colorRamps")
 library(colorRamps)
+install.packages("RColorBrewer")
+library(RColorBrewer)
 coords <- as.data.frame(unique(paste(CTempFrame$lat, CTempFrame$lon)))
 mapdat <- separate(data = coords, col = `unique(paste(CTempFrame$lat, CTempFrame$lon))`, into = c("lat", "long"), sep = " ") 
 mapdat$slopes <- RVals
 sortedMapDat <-mapdat[rev(order(mapdat$slopes)),]
+sortedMapDat <- cbind(sortedMapDat, groups=cut(sortedMapDat$slopes, breaks = c(-Inf,-0.025,-0.0225,-0.02,-0.0175,-.015,-0.0125,-0.01,-0.0075,-.005,-0.0025, 0, 0.0025, 0.005, 0.0075, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.025, Inf),labels = c(1:21)))
+head(sortedMapDat)
 
-map(regions = "usa", xlim = c(-180,-45))
-  points(sortedMapDat$long, sortedMapDat$lat, col = c("blue", "red")[sortedMapDat$Groups], pch = 20, cex = 0.2)
-  range(mapdat$slopes)
+color_Pal_funct <- colorRampPalette(
+  colors = c ("slateblue", "red")
+)
+num_cols <- nlevels(sortedMapDat$groups)
+group_cols <- color_Pal_funct(num_cols)
 
-  sortedMapDat["Groups"] <- NA  
- for(sites in 1:nrow(sortedMapDat)){
-   sortedMapDat$Groups[sites] <- if(sortedMapDat$slopes[sites]>0){1}else{0}
-  }
+map(regions = "usa", xlim = c(-177,-60), ylim = c(25,72))
+  points(sortedMapDat$long, sortedMapDat$lat, col = group_cols[sortedMapDat$groups], pch = 20, cex = 0.2)
+  par(mar=c(0,0,0,0), oma=c(0,0,0,0))
+
+  range(sortedMapDat$lat)
+sortedMapDat[sortedMapDat$groups==12,]
+
+
+
+
+
+
+#Make a color bar scale.
+color.bar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=nticks), title='') {
+  scale = (length(lut)-1)/(max-min)
   
+  dev.new(width=1.75, height=5)
+  plot(c(0,10), c(min,max), type='n', bty='n', xaxt='n', xlab='', yaxt='n', ylab='', main=title)
+  axis(2, ticks, las=1)
+  for (i in 1:(length(lut)-1)) {
+    y = (i-1)/scale + min
+    rect(0,y,10,y+1/scale, col=lut[i], border=NA)
+  }
+}
+  
+
+
  unique(sortedMapDat$Groups)
   
   
