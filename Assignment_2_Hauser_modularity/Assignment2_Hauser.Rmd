@@ -21,29 +21,15 @@ knitr::opts_chunk$set(echo = F)
 <!--Chunk for data import-->
 ```{r DataImport}
 #Dependencies:external source
-provided <- TRUE
-if (provided)
-{
+#provided <- F
+#if (provided)
+#{
   precip <- readRDS("USAAnnualPcpn1950_2008.rds")
   temp <- readRDS("USAAnnualTemp1950_2008.rds")
-#} else ( # Get from internet )
-#{
-  #acis.url <- www.yoururlhere...
-   #httr::GET(url=acis.url)
-    #make human readable:  httr::content(test, "text"...)
-    #convert JSON to R list:   jasonlite::fromJSON(dat)    : makes an R list
-    # set up directory to write data:     ifelse(dir.exists("rds"))
-  # [sidenote: interacting with list
-    #data$object]
-    #save to prevent having to request again
-    #convert JSON data to a matrix
-    #Cleanup:
-      #convert missing values to NA
-      #trace <- runif(1000, 0.0001,.0099)
-      #sub real possible numbers: ff[ff=="T]
-      #class(ff) <- numeric # convert to numeric
-      #change up dates...lubridate
-}
+#}else{source(c("acis2df", "acis2df_pcpn"))
+  
+  
+#}
 
 #New object(s) created: dataframe of each dataset imported, precip, temp
 
@@ -74,60 +60,105 @@ CPrecipFrame <- CleanUpDataFrame(DataRaw = precip, MinYearsDat = 39, RawVar = da
 ####Statistical Analyses
 We ran linear regression analyses on temperature and precipitation data from each site over the course of the last `r ncol(CTempMat)` years. We the minimum, maximum, and average rates of temperature and precipitation change and the percent of sites where changes were statistically significant. We then plotted rate of temperature and precipitation change according to latitude and longitude to visually assess spatial distribution of temperature and precipitation change rates. 
 
-## Results
-
-<!--Chunk for Climate Warming-->
-<!--Code that shows temp change over time at each location that has 40 or more years of data-->
-```{r Warming}
+<!--Chunk for Temp and Precip Change Rates-->
+<!--Code that shows temp and precip change over time at each location that has 40 or more years of data-->
+```{r Warming, warning=FALSE}
 #Dependencies: cdataset matrix
 #Inputs: climate dataset organized by years and sites
-source("HW2_Modularity.R")
-SummaryDat <- setNames(data.frame(matrix(ncol = 4, nrow = 2)), c("Climate Variable", "Minimum Change Rate", "Mean Change Rate", "Maximum Change Rate"))
+Datasets <- list(as.matrix(CTempMat),as.matrix(CPrecipMat))
 years <- 1:ncol(CTempMat)
-RVals <- apply(CTempMat, 1, regressionRval)
-SummaryDat[1,1] <- "Temperature (C)"
-SummaryDat[1,2]<-summary(RVals)[1]
-SummaryDat[1,3]<-summary(RVals)[4]
-SummaryDat[1,4]<-summary(RVals)[6]
+SummaryDat <- setNames(data.frame(matrix(ncol = 4, nrow = length(Datasets))), c("Climate Variable", "Minimum Change Rate", "Mean Change Rate", "Maximum Change Rate"))
+regressionRval <- function(x)
+      {
+          y <- !is.na(x)
+          stat <- lm(y ~ years)
+          rval <- summary(stat)$coefficients[2,1]
+}
 
-years <- 1:ncol(CPrecipMat)
-RVals <- apply(CPrecipMat, 1, regressionRval)
-SummaryDat[2,1] <- "Precipitation (inches)"
-SummaryDat[2,2]<-summary(RVals)[1]
-SummaryDat[2,3]<-summary(RVals)[4]
-SummaryDat[2,4]<-summary(RVals)[6]
+yearsTemp <- 1:ncol(CTempMat)
+RValsT <- apply(CTempMat, 1, regressionRval)
+SummaryDat[1,1] <- "Temperature (C/yr)"
+SummaryDat[1,2]<-summary(RValsT)[1]
+SummaryDat[1,3]<-summary(RValsT)[4]
+SummaryDat[1,4]<-summary(RValsT)[6]
 
+years2 <- 1:ncol(CPrecipMat)
+RValsPr <- apply(CPrecipMat, 1, regressionRval)
+SummaryDat[2,1] <- "Precipitation (inches/yr)"
+SummaryDat[2,2]<-summary(RValsPr)[1]
+SummaryDat[2,3]<-summary(RValsPr)[4]
+SummaryDat[2,4]<-summary(RValsPr)[6]
+
+regressionPval <- function(x)
+  {
+      y <- !is.na(x)
+      stat <- lm(y ~ years)
+      rval <- summary(stat)$coefficients[2,4]
+  }
+
+PValsT <- as.vector(apply(CTempMat, 1, regressionPval))
+TempPercentSignif <- length(which(PValsT < 0.05))/length(PValsT)
+
+PValsPr <- as.vector(apply(CPrecipMat, 1, regressionPval))
+PrecipPercentSignif <- length(which(PValsPr< 0.05))/length(PValsPr)
+
+#Objects created: Vectors of regression slopes for temp and precip vs. time(years)--RValsT, RValsPr, Summary of min, max, and mean of these regression values. Vectors of p-values for each 
+```
+
+## Results
+  Temperature data collected since 1950 indicate an average rate of temperature change across the United States that is nearly 0 (Table 1). However, `r round(TempPercentSignif*100)`% of temperatures experienced significant rates of change with `r round(length(which(RValsT > 0))/length(RValsT)*100)`% of sites experiencing temperature rise and  `r 100-(round(length(which(RValsT > 0))/length(RValsT)*100))`% of sites experiencing temperature decrease. 
+  
+  For precipitation, `r round(length(which(RValsPr > 0))/length(RValsPr)*100)`% of sites saw increased rates of precipitation, while precipitation declined at `r 100-(round(length(which(RValsPr > 0))/length(RValsPr)*100))`% of sites over the course of the study years. During the sampling period, `r round(PrecipPercentSignif*100)`% of sites experienced significant changes in precipiation rate. 
+  
+```{r DatTable}
+knitr::kable(SummaryDat,
+             caption = "Table 1. Minimum, maximum, and mean rate of temperature and precipitation change at sites across the United States. Negative values idicate decreasing temperatures and precipitation over at least 40 years and positive values indicate increasing temperatures and precipitation over at least 40 years.")
 
 #New objects created: table of maximum, minimum, and mean temperature changes across sites in the US.
 ```
+  Mapped data show regional trends in temperature and precipitation changes (Fig. 1 A & B). Temperatures appear to show warming trends in mid-western and northern regions, while coastal regions, particularly the West Coast, appear to experience cooling trends. 
+  
+  
+<!--Chunk for Maps-->
+<!--Code that shows spatial distribution of temperature and precipitation change rates-->
+```{r climateMaps,fig.cap="Figure 1. A) United States map showing temperature change per year since 1950. Darker blues indicate greater cooling, while darker reds indicate greater warming. B) United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker oranges indicate drier conditions."}
+#Dependencies: cdataset dataframes
+#Inputs: dataset, as dataframe with years and temps
+#temp map
+coords <- as.data.frame(unique(paste(CTempFrame$lat, CTempFrame$lon)))
+mapdat <- separate(data = coords, col = `unique(paste(CTempFrame$lat, CTempFrame$lon))`, into = c("lat", "long"), sep = " ") 
+mapdat$slopes <- as.vector(RValsT)
+sortedMapDat <-mapdat[rev(order(mapdat$slopes)),]
+sortedMapDat <- cbind(sortedMapDat, groups=cut(sortedMapDat$slopes, breaks = c(-Inf,-0.025,-0.0225,-0.02,-0.0175,-.015,-0.0125,-0.01,-0.0075,-.005,-0.0025, 0, 0.0025, 0.005, 0.0075, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.025, Inf),labels = c(1:21)))
 
-<!--Chunk for Precip Change-->
-<!--Code that shows precip over time at each location that has 40 or more years of data-->
-```{r Precip}
-#Dependencies: cdataset matrix
-#Inputs: precipit dataset, with years and temps
-#function (data=precip dataset)
-#{
-#subset by location. By location:
-#corr(temp_data~year)
-#plot(temp_data~year)
+color_Pal_funct <- colorRampPalette(
+  colors = c ("slateblue", "red")
+)
+num_cols <- nlevels(sortedMapDat$groups)
+group_cols <- color_Pal_funct(num_cols)
 
-#return(statistic, plot)
-#}
+map(regions = "usa", xlim = c(-177,-60), ylim = c(25,72))
+points(sortedMapDat$long, sortedMapDat$lat, col = group_cols[sortedMapDat$groups], pch = 20, cex = 0.2)
 
-#New objects created: plots by location, corr statistic
+#PrecipMap
+coordsPr <- as.data.frame(unique(paste(CPrecipFrame$lat, CPrecipFrame$lon)))
+mapdatPr <- separate(data = coordsPr, col = `unique(paste(CPrecipFrame$lat, CPrecipFrame$lon))`, into = c("lat", "long"), sep = " ")
+mapdatPr$slopes <- as.vector(RVals)
+sortedMapDatPr <-mapdatPr[rev(order(mapdatPr$slopes)),]
+sortedMapDatPr <- cbind(sortedMapDatPr, groups=cut(sortedMapDatPr$slopes, breaks = c(-Inf,-0.025,-0.0225,-0.02,-0.0175,-.015,-0.0125,-0.01,-0.0075,-.005,-0.0025, 0, 0.0025, 0.005, 0.0075, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.025, Inf),labels = c(1:21)))
+
+color_Pal_funct <- colorRampPalette(
+  colors = c ("blue", "orange")
+)
+num_colsPr <- nlevels(sortedMapDatPr$groups)
+group_colsPr <- color_Pal_funct(num_colsPr)
+
+map(regions = "usa", xlim = c(-177,-60), ylim = c(25,72))
+points(sortedMapDatPr$long, sortedMapDatPr$lat, col = group_colsPr[sortedMapDatPr$groups], pch = 20, cex = 0.2)
+
+#New objects created: temp and precip distribution maps
 ```
 
-<!--A chunk to map the data-->
-```{r Maps}
-#Dependencies: plots and corr stats, datasets
-#input: dataset
-
-#function to show plots by location
-#return(map)
-
-#New ojbects created: datamaps
-```
 
 
 ## Conclusions
