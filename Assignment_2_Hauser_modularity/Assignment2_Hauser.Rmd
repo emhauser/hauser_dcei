@@ -48,9 +48,11 @@ CPrecipFrame <- CleanUpDataFrame(DataRaw = precip, MinYearsDat = 39, RawVar = da
  #New objects created: data.frame and matrix of each dataset: CDatasetFrame and CDatasetMat
 ```
 # Abstract
+  
+
 
 ## Introduction
-  Studies increasingly acknowledge that climates have been shifting over the past several decades and will continue to change in coming years in response to human environmental impacts (CITE). Although climate change was initially couched as "global warming", more recent observations suggest that we may experience both warming and cooling trends, characterized instead by more frequent temperature and precipitation extremes (CITE). These extreme events are already felt in warmer drier countries, particuarly in Africa and Asia where the infrastructure to handle repeated extreme climate events is not strong (@Patz2005). In the United States, however, more temperate climates and a socioeconomic standing that permits relatively quick responses to extreme weather events often makes the impacts of climate change go unacknowledged (@Patz2005). United States climate data is accumulating daily, though, such that a thorough analysis of temperature extremes is possible. This study aims to determine the extent to which temperature and precipitation patterns have changed in the United States over the past several decades, and whether observed changes represent overall warming trends or rather, an increase in climate extremes.
+  Studies increasingly acknowledge that climates have been shifting over the past several decades and will continue to change in coming years in response to human environmental impacts [@Walsh2014]. Although climate change was initially couched as "global warming", more recent observations suggest that we may experience both warming and cooling trends, characterized instead by more frequent temperature and precipitation extremes [@Karl1996]. These extreme events are already felt in warmer drier countries, particuarly in Africa and Asia where the infrastructure to handle repeated extreme climate events is not strong (@Patz2005). In the United States, however, more temperate climates and a socioeconomic standing that permits relatively quick responses to extreme weather events often makes the impacts of climate change go unacknowledged (@Patz2005). United States climate data is accumulating daily, though, such that a thorough analysis of temperature extremes is possible. This study aims to determine the extent to which temperature and precipitation patterns have changed in the United States over the past several decades, and whether observed changes represent overall warming trends or rather, an increase in climate extremes.
 
 ## Methods
 ####Data acquisition
@@ -77,7 +79,7 @@ regressionRval <- function(x)
 
 yearsTemp <- 1:ncol(CTempMat)
 RValsT <- apply(CTempMat, 1, regressionRval)
-SummaryDat[1,1] <- "Temperature (C/yr)"
+SummaryDat[1,1] <- "Temperature (c/yr)"
 SummaryDat[1,2]<-summary(RValsT)[1]
 SummaryDat[1,3]<-summary(RValsT)[4]
 SummaryDat[1,4]<-summary(RValsT)[6]
@@ -116,12 +118,14 @@ knitr::kable(SummaryDat,
 
 #New objects created: table of maximum, minimum, and mean temperature changes across sites in the US.
 ```
-  Mapped data show regional trends in temperature and precipitation changes (Fig. 1 A & B). Temperatures appear to show warming trends in mid-western and northern regions, while coastal regions, particularly the West Coast, appear to experience cooling trends. 
+  
+  
+  Mapped data show regional trends in temperature and precipitation changes (Figs. 1 & 2). Temperatures appear to show warming trends in mid-western and northern regions, while coastal regions, particularly the West Coast, appear to experience cooling trends (Fig. 1). 
   
   
 <!--Chunk for Maps-->
 <!--Code that shows spatial distribution of temperature and precipitation change rates-->
-```{r climateMaps,fig.cap="Figure 1. A) United States map showing temperature change per year since 1950. Darker blues indicate greater cooling, while darker reds indicate greater warming. B) United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker oranges indicate drier conditions."}
+```{r TempMap,fig.cap="Figure 1. United States map showing temperature change per year since 1950. Darker blues indicate greater cooling, while darker reds indicate greater warming. B) United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker oranges indicate drier conditions."}
 #Dependencies: cdataset dataframes
 #Inputs: dataset, as dataframe with years and temps
 #temp map
@@ -140,10 +144,14 @@ group_cols <- color_Pal_funct(num_cols)
 map(regions = "usa", xlim = c(-177,-60), ylim = c(25,72))
 points(sortedMapDat$long, sortedMapDat$lat, col = group_cols[sortedMapDat$groups], pch = 20, cex = 0.2)
 
+#New objects created: temp and precip distribution maps
+```
+
+```{r PrecipMap,fig.cap="Figure 2. United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker oranges indicate drier conditions."}
 #PrecipMap
 coordsPr <- as.data.frame(unique(paste(CPrecipFrame$lat, CPrecipFrame$lon)))
 mapdatPr <- separate(data = coordsPr, col = `unique(paste(CPrecipFrame$lat, CPrecipFrame$lon))`, into = c("lat", "long"), sep = " ")
-mapdatPr$slopes <- as.vector(RVals)
+mapdatPr$slopes <- as.vector(RValsPr)
 sortedMapDatPr <-mapdatPr[rev(order(mapdatPr$slopes)),]
 sortedMapDatPr <- cbind(sortedMapDatPr, groups=cut(sortedMapDatPr$slopes, breaks = c(-Inf,-0.025,-0.0225,-0.02,-0.0175,-.015,-0.0125,-0.01,-0.0075,-.005,-0.0025, 0, 0.0025, 0.005, 0.0075, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.025, Inf),labels = c(1:21)))
 
@@ -159,9 +167,21 @@ points(sortedMapDatPr$long, sortedMapDatPr$lat, col = group_colsPr[sortedMapDatP
 #New objects created: temp and precip distribution maps
 ```
 
-
-
 ## Conclusions
+ Although the effects of climate change in the United States are often percieved as subtle compared to other locations around the globe [@Patz2005], changes in temperature and precipitation are becoming progressively more obvious in the US [@Walsh2014]. Our data from the ACIS corroborate growing evidence that climate is changing in the United States. Although we observed minimal change in the mean temperature and precipitation across the country over the course of the past half century (Table 1), we observed that approximately half of our sites experienced temperature and precipitation increases while the other half experienced decreases. This suggests that the mean temperature change is not a representative metric of changes in US climate, and that US climate change is instead characterized by enhanced temperature and precipitation extremes.
+  Our findings are in agreement with recent studies demonstrating that, not only are climates changing in the US, but that temperature and precipition increases and decreases are regional [@Mutiibwa2014]. Mutiibwa et al.(2014) show that warming trends are greatest in the Mid-West and Northeast, while cooling trends dominate the West Coast. This trend is further supported with recent data from NASA's Earth Observatory, showing regionality of US temperature changes (Fig. 3) 
 
+```{r, echo = F, fig.cap="Figure 3. Map of United States temperature change between 1991 and 2012, as observed by the NASA Earth Observatory.", fig.height=.5, fig.width=1}
+knitr::include_graphics("https://eoimages.gsfc.nasa.gov/images/imagerecords/83000/83624/temperature_nca-1991-2012_lrg.jpg", dpi=100)
+```
+
+
+  Likewise, precipitation changes show a great deal of regionality with eastern increases and mid-western decreases (Fig. 4) [@Karl1996]. 
+  
+```{r, echo = F, fig.cap="Figure 4. Map of United States precipitation change between 1991 and 2012, as observed by the NASA Earth Observatory.", fig.height=.5, fig.width=1}
+knitr::include_graphics("https://eoimages.gsfc.nasa.gov/images/imagerecords/83000/83624/Precipitation_nca_1991-2012_lrg.jpg", dpi=100)
+```
+  
+  Thus, it appears that climate data collected over the past ~50 years demonstrate a United States climat that is from static. Although temperature and precipitation averages may not express the shifting climate regimes, the country is experiencing regionally-based increases and decreases in both temperature and precipitation. In the coming years, this may lead us to expect greater regional variability and an increase in extreme weather events. 
 
 ## References
