@@ -4,13 +4,15 @@ author: "Emma Hauser"
 output: html_document
 params:
   today: !r.Sys.Date
-#bibliography: HW2Refs.bib
+bibliography: HW2_Refs.bib
 ---
 
-<!--Chunk for file setup-->
+<!--Chunk for file setup-->   <!--Modularity tip 4: For this document, I tried to define modules and interfaces in advance, label all of them, and detail dependences and new objects created-->
+
 ```{r setup, include=FALSE}
-#dependencies: none
-#load packages:
+#dependencies: Outside script for common packages and functions
+source("CommonlyUsedPackages.R")   ##Modularity Tip 9/10: source in other scripts, in particular for commonly used functions and/or packages
+#load packages
 library(maps)
 library(tidyr)
 library(colorRamps)
@@ -20,39 +22,64 @@ knitr::opts_chunk$set(echo = F)
 
 <!--Chunk for data import-->
 ```{r DataImport}
-#Dependencies:external source
-#provided <- F
-#if (provided)
-#{
+#Dependencies:external source, directory
+provided <- TRUE
+if (provided)
+{
   precip <- readRDS("USAAnnualPcpn1950_2008.rds")
   temp <- readRDS("USAAnnualTemp1950_2008.rds")
-#}else{source(c("acis2df", "acis2df_pcpn"))
-  
-  
+}
+#}else{
+    #source(c("acis2df", "acis2df_pcpn"))
+#}
+
+#Modularity tip 6 and 7: copied code shown above indicates the utility of modularity here. I have 2 readRDS statements. It would be better to make a loop and read them in as a list, over which each of the subsequent modules can run for loops (This would also make it really easy to add in other climate parameters later with new datasets). I've been having trouble getting this to run, though, which is why I include pseudocode (below) for what I want to do rather than actual working code. 
+
+#climateDatasets <- list()
+#climateParam <- c("temp", "precip") 
+#you could add new parameters of interest to "climateParam" for more datasets
+#function (directory, climateParam, startYr, endYr)
+#{
+  #for(set in seq_along(climateParam))
+#   {
+#     setname <- paste0(climateParam[set])
+#     climateDatasets[set] <- readRDS(cat("USAAnnual", climateParam, startYr, "_", endYr, ".rds")
+#     name(climateDatasets[set]) <- setname
+#     }
 #}
 
 #New object(s) created: dataframe of each dataset imported, precip, temp
-
 ```
 
 <!--Chunk for cleaning data-->
 ```{r DataCleanup}
-#Dependencies: imported data, precip, temp
-#Inputs/Args: number of years data required (40), dataset (here, temp and precip), data variable of interest (here this is "data" column in the data.frame)
-source("DataCleanupCodes.R")
-CTempMat <- CleanUpMat(DataRaw = temp, MinYearsDat = 39, RawVar = data)   # to be more modular, make these into a loop
+#Dependencies: imported data as a list of dataframes
+#Inputs/Args: number of years of data required for a site to be considered (40), dataset of interest (here, temp or precip), data variable of interest (here this is "data" column in the data.frame)
+source("DataCleanupCodes.R")    #Modularity Tip 9: Here I opted to source in code because it allows you to see what's created without having to look at all the text for the cleanup codes. These could be more modular, too. 
+CTempMat <- CleanUpMat(DataRaw = temp, MinYearsDat = 39, RawVar = data) 
 CTempFrame <- CleanUpDataFrame(DataRaw = temp, MinYearsDat = 39, RawVar = data)
 CPrecipMat <- CleanUpMat(DataRaw = precip, MinYearsDat = 39, RawVar = data)
 CPrecipFrame <- CleanUpDataFrame(DataRaw = precip, MinYearsDat = 39, RawVar = data)
 
+#Again with modularity tip 6: repeated code indicates usefulness of a loop. I also want to write my constants into variables: 
+# DataMats <- list()
+# DataFrames <- list()
+# MinYearsDat <- 39
+# RawVar = data
+# for (dataset in seq_along(climateDatasets))
+# {
+#   DataMats[set] <- CleanUpMat(DataRaw = [set])
+#   DataFrames[set] <- CleanUpDataFrame(DataRaw = [set])
+# }
+
  #New objects created: data.frame and matrix of each dataset: CDatasetFrame and CDatasetMat
 ```
-# Abstract
-  
 
+## Abstract
+  In the context of global climate change, United States climates are often less scrutinized because socioeconomic infrastructure makes climate impacts less obvious. In this study, we leverage the increased availability of US climate data to examine the extent of US climate change, specifically asking whether the country is experiencing a uniform warming trend. We observe that the States have seen significant changes in climate over the past half century but that climate shifts are characterized by regional extremes in either increasing or decreasing temperature and precipitation, with mid-western regions becoming warmer and drier and coastal regions becoming cooler and/or wetter. Regional trends will help inform policy makers as they alter United States infrastructure in response to heightened extreme weather events. 
 
 ## Introduction
-  Studies increasingly acknowledge that climates have been shifting over the past several decades and will continue to change in coming years in response to human environmental impacts [@Walsh2014]. Although climate change was initially couched as "global warming", more recent observations suggest that we may experience both warming and cooling trends, characterized instead by more frequent temperature and precipitation extremes [@Karl1996]. These extreme events are already felt in warmer drier countries, particuarly in Africa and Asia where the infrastructure to handle repeated extreme climate events is not strong (@Patz2005). In the United States, however, more temperate climates and a socioeconomic standing that permits relatively quick responses to extreme weather events often makes the impacts of climate change go unacknowledged (@Patz2005). United States climate data is accumulating daily, though, such that a thorough analysis of temperature extremes is possible. This study aims to determine the extent to which temperature and precipitation patterns have changed in the United States over the past several decades, and whether observed changes represent overall warming trends or rather, an increase in climate extremes.
+  Studies increasingly acknowledge that climates have been shifting over the past several decades and will continue to change in coming years in response to human environmental impacts [@Walsh2014, @Wang2010]. Although climate change was initially couched as "global warming", more recent observations suggest that we may experience both warming and cooling trends, characterized instead by more frequent temperature and precipitation extremes [@Karl1996]. These extreme events are already felt in warmer drier countries, particuarly in Africa and Asia where the infrastructure to handle repeated extreme climate events is not strong [@Patz2005]. In the United States, however, more temperate climates and a socioeconomic standing that permits relatively quick responses to extreme weather events often makes the impacts of climate change go unacknowledged [@Patz2005]. United States climate data is accumulating daily, though, such that a thorough analysis of temperature extremes is possible. This study aims to determine the extent to which temperature and precipitation patterns have changed in the United States over the past several decades, and whether observed changes represent overall warming trends or rather, an increase in climate extremes.
 
 ## Methods
 ####Data acquisition
@@ -60,22 +87,25 @@ CPrecipFrame <- CleanUpDataFrame(DataRaw = precip, MinYearsDat = 39, RawVar = da
   In this study, we obtained temperature ($^{\circ}$C)and precipitation (inches) data from the Applied Climate Information System (ACIS) from 1950 to present. These data represent multpile sites in each of the 50 states, however we excluded sites for which less than 40 years of climate data had been collected. This gave us `r nrow(CTempMat)` sites of temperature data and `r nrow(CPrecipMat)` sites of precipitation data. 
   
 ####Statistical Analyses
-We ran linear regression analyses on temperature and precipitation data from each site over the course of the last `r ncol(CTempMat)` years. We the minimum, maximum, and average rates of temperature and precipitation change and the percent of sites where changes were statistically significant. We then plotted rate of temperature and precipitation change according to latitude and longitude to visually assess spatial distribution of temperature and precipitation change rates. 
+  We ran linear regression analyses on temperature and precipitation data from each site over the course of the last `r ncol(CTempMat)` years. We the minimum, maximum, and average rates of temperature and precipitation change and the percent of sites where changes were statistically significant. We then plotted rate of temperature and precipitation change according to latitude and longitude to visually assess spatial distribution of temperature and precipitation change rates. 
 
 <!--Chunk for Temp and Precip Change Rates-->
 <!--Code that shows temp and precip change over time at each location that has 40 or more years of data-->
 ```{r Warming, warning=FALSE}
-#Dependencies: cdataset matrix
+#Dependencies: cdataset matrix or list of matrices created in previous chunk
 #Inputs: climate dataset organized by years and sites
 Datasets <- list(as.matrix(CTempMat),as.matrix(CPrecipMat))
 years <- 1:ncol(CTempMat)
 SummaryDat <- setNames(data.frame(matrix(ncol = 4, nrow = length(Datasets))), c("Climate Variable", "Minimum Change Rate", "Mean Change Rate", "Maximum Change Rate"))
-regressionRval <- function(x)
-      {
-          y <- !is.na(x)
-          stat <- lm(y ~ years)
-          rval <- summary(stat)$coefficients[2,1]
-}
+# By Modularity Tip 9: it would be better to have code for these functions in an outside script (maybe in my "CommonScripts" file). But for some reason my Rmd wouldn't run without them here and they're short, so I included them.
+
+#RVals
+regressionRval <- function(x)      
+  {
+        y <- !is.na(x)
+        stat <- lm(y ~ years)
+        rval <- summary(stat)$coefficients[2,1]
+  }
 
 yearsTemp <- 1:ncol(CTempMat)
 RValsT <- apply(CTempMat, 1, regressionRval)
@@ -91,6 +121,18 @@ SummaryDat[2,2]<-summary(RValsPr)[1]
 SummaryDat[2,3]<-summary(RValsPr)[4]
 SummaryDat[2,4]<-summary(RValsPr)[6]
 
+#Modularity Tip 9: Need to make code into a loop again.
+# for (set in seq_along(Datasets))
+# {
+#   years <- 1:ncol(set)
+#   RVals <- apply(set, 1, regressionRval)
+#   SummaryDat[set,1] <- paste0(set)
+#   SummaryDat[set,2]<-summary(RVals)[1]
+#   SummaryDat[set,3]<-summary(RVals)[4]
+#   SummaryDat[set,4]<-summary(RVals)[6]
+# }
+
+#PVals
 regressionPval <- function(x)
   {
       y <- !is.na(x)
@@ -104,6 +146,13 @@ TempPercentSignif <- length(which(PValsT < 0.05))/length(PValsT)
 PValsPr <- as.vector(apply(CPrecipMat, 1, regressionPval))
 PrecipPercentSignif <- length(which(PValsPr< 0.05))/length(PValsPr)
 
+#Ideal loop:
+# for(set in seq_along(Datasets))
+# {
+#  PVals <- as.vector(apply(set, 1, regressionPval))
+#  PrecipPercentSignif <- length(which(PVals< 0.05))/length(PVals) 
+# }
+
 #Objects created: Vectors of regression slopes for temp and precip vs. time(years)--RValsT, RValsPr, Summary of min, max, and mean of these regression values. Vectors of p-values for each 
 ```
 
@@ -111,10 +160,14 @@ PrecipPercentSignif <- length(which(PValsPr< 0.05))/length(PValsPr)
   Temperature data collected since 1950 indicate an average rate of temperature change across the United States that is nearly 0 (Table 1). However, `r round(TempPercentSignif*100)`% of temperatures experienced significant rates of change with `r round(length(which(RValsT > 0))/length(RValsT)*100)`% of sites experiencing temperature rise and  `r 100-(round(length(which(RValsT > 0))/length(RValsT)*100))`% of sites experiencing temperature decrease. 
   
   For precipitation, `r round(length(which(RValsPr > 0))/length(RValsPr)*100)`% of sites saw increased rates of precipitation, while precipitation declined at `r 100-(round(length(which(RValsPr > 0))/length(RValsPr)*100))`% of sites over the course of the study years. During the sampling period, `r round(PrecipPercentSignif*100)`% of sites experienced significant changes in precipiation rate. 
-  
+
+<!--Code chunk to make a summary table of min, max, and average rates of change of examined climate variables-->
 ```{r DatTable}
+#Dependencies: Previous code chunk generating vectors of regression slopes and p-values
+
 knitr::kable(SummaryDat,
              caption = "Table 1. Minimum, maximum, and mean rate of temperature and precipitation change at sites across the United States. Negative values idicate decreasing temperatures and precipitation over at least 40 years and positive values indicate increasing temperatures and precipitation over at least 40 years.")
+
 
 #New objects created: table of maximum, minimum, and mean temperature changes across sites in the US.
 ```
@@ -123,12 +176,12 @@ knitr::kable(SummaryDat,
   Mapped data show regional trends in temperature and precipitation changes (Figs. 1 & 2). Temperatures appear to show warming trends in mid-western and northern regions, while coastal regions, particularly the West Coast, appear to experience cooling trends (Fig. 1). 
   
   
-<!--Chunk for Maps-->
-<!--Code that shows spatial distribution of temperature and precipitation change rates-->
-```{r TempMap,fig.cap="Figure 1. United States map showing temperature change per year since 1950. Darker blues indicate greater cooling, while darker reds indicate greater warming. B) United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker oranges indicate drier conditions."}
+<!--Chunk for Maps. Shows spatial distribution of temperature and precipitation change rates. First Chunk is temp map. Since I wanted to separate them in my text, I made 2 chunks, but I could be more efficient by making this another loop (Modularity tip 9)-->
+```{r TempMap,fig.cap="Figure 1. United States map showing temperature change per year since 1950. Darker blues indicate greater cooling, while darker reds indicate greater warming."}
 #Dependencies: cdataset dataframes
 #Inputs: dataset, as dataframe with years and temps
-#temp map
+
+#Temp map
 coords <- as.data.frame(unique(paste(CTempFrame$lat, CTempFrame$lon)))
 mapdat <- separate(data = coords, col = `unique(paste(CTempFrame$lat, CTempFrame$lon))`, into = c("lat", "long"), sep = " ") 
 mapdat$slopes <- as.vector(RValsT)
@@ -147,7 +200,10 @@ points(sortedMapDat$long, sortedMapDat$lat, col = group_cols[sortedMapDat$groups
 #New objects created: temp and precip distribution maps
 ```
 
-```{r PrecipMap,fig.cap="Figure 2. United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker oranges indicate drier conditions."}
+
+<!--Second map chunk, this one for precip data. Both maps would be better and more modular as one looped chunk (Modularity Tip 6)-->
+```{r PrecipMap,fig.cap="Figure 2. United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker orange indicates drier conditions."}
+
 #PrecipMap
 coordsPr <- as.data.frame(unique(paste(CPrecipFrame$lat, CPrecipFrame$lon)))
 mapdatPr <- separate(data = coordsPr, col = `unique(paste(CPrecipFrame$lat, CPrecipFrame$lon))`, into = c("lat", "long"), sep = " ")
@@ -158,6 +214,7 @@ sortedMapDatPr <- cbind(sortedMapDatPr, groups=cut(sortedMapDatPr$slopes, breaks
 color_Pal_funct <- colorRampPalette(
   colors = c ("blue", "orange")
 )
+
 num_colsPr <- nlevels(sortedMapDatPr$groups)
 group_colsPr <- color_Pal_funct(num_colsPr)
 
@@ -168,20 +225,22 @@ points(sortedMapDatPr$long, sortedMapDatPr$lat, col = group_colsPr[sortedMapDatP
 ```
 
 ## Conclusions
- Although the effects of climate change in the United States are often percieved as subtle compared to other locations around the globe [@Patz2005], changes in temperature and precipitation are becoming progressively more obvious in the US [@Walsh2014]. Our data from the ACIS corroborate growing evidence that climate is changing in the United States. Although we observed minimal change in the mean temperature and precipitation across the country over the course of the past half century (Table 1), we observed that approximately half of our sites experienced temperature and precipitation increases while the other half experienced decreases. This suggests that the mean temperature change is not a representative metric of changes in US climate, and that US climate change is instead characterized by enhanced temperature and precipitation extremes.
-  Our findings are in agreement with recent studies demonstrating that, not only are climates changing in the US, but that temperature and precipition increases and decreases are regional [@Mutiibwa2014]. Mutiibwa et al.(2014) show that warming trends are greatest in the Mid-West and Northeast, while cooling trends dominate the West Coast. This trend is further supported with recent data from NASA's Earth Observatory, showing regionality of US temperature changes (Fig. 3) 
+ Although the effects of climate change in the United States are often percieved as subtle compared to other locations around the globe [@Patz2005], changes in temperature and precipitation are becoming progressively more obvious in the US [@Walsh2014]. Our data from the ACIS corroborate growing evidence that climate is changing in the United States. Although we observed minimal change in the mean temperature and precipitation across the country over the course of the past half century (Table 1), we observed that approximately half of our sites experienced temperature and precipitation increases while the other half experienced decreases. This suggests that the mean temperature change is not the most representative metric of changes in US climate, and that US climate change is instead characterized by enhanced temperature and precipitation extremes.
+  Our findings are in agreement with recent studies demonstrating that, not only are climates changing in the US, but that temperature and precipition increases and decreases are regional [@Mutiibwa2015]. Mutiibwa et al. (2015) show that warming trends are greatest in the Mid-West and Northeast, while cooling trends dominate the West Coast. This trend is further supported with recent data from NASA's Earth Observatory, showing regionality of US temperature changes (Fig. 3). 
 
+<!--Chunk showing outside source temp change map (from NASA)
+  Although these next 2 chunks do not really rely on above code input, I labeled them to make code more extensible (Modularity tip 2)-->  
 ```{r, echo = F, fig.cap="Figure 3. Map of United States temperature change between 1991 and 2012, as observed by the NASA Earth Observatory.", fig.height=.5, fig.width=1}
 knitr::include_graphics("https://eoimages.gsfc.nasa.gov/images/imagerecords/83000/83624/temperature_nca-1991-2012_lrg.jpg", dpi=100)
 ```
 
-
   Likewise, precipitation changes show a great deal of regionality with eastern increases and mid-western decreases (Fig. 4) [@Karl1996]. 
   
+<!--Chunk showing outside source precip change map (also from NASA)-->
 ```{r, echo = F, fig.cap="Figure 4. Map of United States precipitation change between 1991 and 2012, as observed by the NASA Earth Observatory.", fig.height=.5, fig.width=1}
 knitr::include_graphics("https://eoimages.gsfc.nasa.gov/images/imagerecords/83000/83624/Precipitation_nca_1991-2012_lrg.jpg", dpi=100)
 ```
   
-  Thus, it appears that climate data collected over the past ~50 years demonstrate a United States climat that is from static. Although temperature and precipitation averages may not express the shifting climate regimes, the country is experiencing regionally-based increases and decreases in both temperature and precipitation. In the coming years, this may lead us to expect greater regional variability and an increase in extreme weather events. 
+  Thus, it appears that climate data collected over the past ~50 years depict a United States climate that is far from static. Although temperature and precipitation averages may not express the shifting climate regimes, the country is experiencing regionally-based increases and decreases in both temperature and precipitation. In the coming years, this may lead us to expect greater regional variability and an increase in extreme weather events. 
 
 ## References
