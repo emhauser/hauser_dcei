@@ -7,7 +7,16 @@ params:
 bibliography: HW2_Refs.bib
 ---
 
+<!--***DAN: You can find my comments by searching for "***DAN:"-->
+
+<!--***DAN: Overall excellent effort! The code has problems in various ways, as you have observed (see also my comments below and my solutions), but you did a great effort on all parts of the assignment, and that's what the grade is based on, so 10/10. I really appreciate that you were so critical of your own code that you wrote extensive comments on how it could be done better! That's how you get better at this, so keep it up. I have not always solved all your problems in my below comments because one consistent theme was similarities between what you wrote in your comments you would have liked to do, and the approach of the solutions I have already distributed to you. So I recommend you spend some time going through those solutions. If you have any questions about them, please feel free to knock on my door.-->
+
+<!--***DAN: Very good use of git, i.e., several commits with usually informative commit messages!-->
+
+<!--***DAN: Very nice writeup for such a short-turnaround assignment!-->
+
 <!--Chunk for file setup-->   <!--Modularity tip 4: For this document, I tried to define modules and interfaces in advance, label all of them, and detail dependences and new objects created-->
+<!--***DAN: Great!-->
 
 ```{r setup, include=FALSE}
 #dependencies: Outside script for common packages and functions
@@ -35,6 +44,8 @@ if (provided)
 
 #Modularity tip 6 and 7: copied code shown above indicates the utility of modularity here. I have 2 readRDS statements. It would be better to make a loop and read them in as a list, over which each of the subsequent modules can run for loops (This would also make it really easy to add in other climate parameters later with new datasets). I've been having trouble getting this to run, though, which is why I include pseudocode (below) for what I want to do rather than actual working code. 
 
+#***DAN: Very good realization. The solutions I provided took an approach like that, so let me know if reading those solutions does not help you understand how to pull that off.
+
 #climateDatasets <- list()
 #climateParam <- c("temp", "precip") 
 #you could add new parameters of interest to "climateParam" for more datasets
@@ -50,6 +61,8 @@ if (provided)
 
 #New object(s) created: dataframe of each dataset imported, precip, temp
 ```
+
+<!--***DAN: Excellent attention to dependencies and outputs of chunks!-->
 
 <!--Chunk for cleaning data-->
 ```{r DataCleanup}
@@ -98,6 +111,8 @@ Datasets <- list(as.matrix(CTempMat),as.matrix(CPrecipMat))
 years <- 1:ncol(CTempMat)
 SummaryDat <- setNames(data.frame(matrix(ncol = 4, nrow = length(Datasets))), c("Climate Variable", "Minimum Change Rate", "Mean Change Rate", "Maximum Change Rate"))
 # By Modularity Tip 9: it would be better to have code for these functions in an outside script (maybe in my "CommonScripts" file). But for some reason my Rmd wouldn't run without them here and they're short, so I included them.
+
+#***DAN: when you had them in an outside script, did you "source" them in before running them in the Rmd? They cannot be called from within the Rmd unless that have been previously "source"'d in (using the "source" command).
 
 #RVals
 regressionRval <- function(x)      
@@ -156,6 +171,8 @@ PrecipPercentSignif <- length(which(PValsPr< 0.05))/length(PValsPr)
 #Objects created: Vectors of regression slopes for temp and precip vs. time(years)--RValsT, RValsPr, Summary of min, max, and mean of these regression values. Vectors of p-values for each 
 ```
 
+<!--***DAN: I really appreciate that you have been critical of your own code to the point that you are writing extensive comments on how it could have been done better!-->
+
 ## Results
   Temperature data collected since 1950 indicate an average rate of temperature change across the United States that is nearly 0 (Table 1). However, `r round(TempPercentSignif*100)`% of temperatures experienced significant rates of change with `r round(length(which(RValsT > 0))/length(RValsT)*100)`% of sites experiencing temperature rise and  `r 100-(round(length(which(RValsT > 0))/length(RValsT)*100))`% of sites experiencing temperature decrease. 
   
@@ -202,6 +219,8 @@ points(sortedMapDat$long, sortedMapDat$lat, col = group_cols[sortedMapDat$groups
 
 
 <!--Second map chunk, this one for precip data. Both maps would be better and more modular as one looped chunk (Modularity Tip 6)-->
+<!--***DAN: Or one function, called as you like at two different places in your code. Or one loop that creates and stores (on your computer's disk) two pdfs with your two maps, and then load those in with separate short chunks placed where you want in the writing.-->
+
 ```{r PrecipMap,fig.cap="Figure 2. United States map showing precipitation change per year since 1950. Darker blues indicate greater moisture, while darker orange indicates drier conditions."}
 
 #PrecipMap
